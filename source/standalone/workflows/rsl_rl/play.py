@@ -65,6 +65,21 @@ def main():
     )
     agent_cfg: RslRlOnPolicyRunnerCfg = cli_args.parse_rsl_rl_cfg(args_cli.task, args_cli)
 
+    LOG_ACTOBS = False
+    ZEROACT = False
+    if LOG_ACTOBS: # Daniel: simplified scene for logging
+        env_cfg.scene.num_envs = 1
+        env_cfg.curriculum = {}
+        env_cfg.scene.terrain.terrain_type = "plane"
+        env_cfg.scene.terrain.terrain_generator = None
+        env_cfg.commands.base_velocity.ranges.lin_vel_x = (1.0, 1.0)
+        env_cfg.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
+        env_cfg.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
+        env_cfg.commands.base_velocity.ranges.heading = (0.0, 0.0)
+        env_cfg.observations.policy.enable_corruption = False
+        env_cfg.events.base_external_force_torque = None
+        env_cfg.events.push_robot = None
+
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
@@ -105,6 +120,37 @@ def main():
         ppo_runner.alg.actor_critic, normalizer=ppo_runner.obs_normalizer, path=export_model_dir, filename="policy.onnx"
     )
 
+
+    actobs_log = {}
+    def NP(tensor):
+        if isinstance(tensor, torch.Tensor):
+            return tensor.detach().cpu().numpy()
+        else:
+            return tensor
+    def log_actobs(actobs_log, actions, obs, rew, dones, log=True, N=100):
+        import numpy as np
+        import json
+        if 'actobs_npy' not in actobs_log:
+            actobs_log['actobs_npy'] = []
+            actobs_log['fields'] = [
+                ['actions', tuple(actions.shape)],
+                ['obs', tuple(obs.shape)],
+                ['rew', tuple(rew.shape)],
+                ['dones', tuple(dones.shape)],
+            ]
+        if len(actobs_log['actobs_npy']) < N:
+            actions = NP(actions)
+            obs = NP(obs)
+            rew = NP(rew)
+            dones = NP(dones)
+            actobs_log['actobs_npy'].append(np.concatenate([actions.flatten(), obs.flatten(), rew.flatten(), dones.flatten()]).tolist())
+            if len(actobs_log['actobs_npy']) == N:
+                path = "/tmp/actobs_log.json"
+                with open(path, 'w') as f:
+                    json.dump(actobs_log, f)
+                    print(path, "written")
+
+
     # reset environment
     obs, _ = env.get_observations()
     timestep = 0
@@ -114,8 +160,11 @@ def main():
         with torch.inference_mode():
             # agent stepping
             actions = policy(obs)
+            if ZEROACT:
+                actions = actions * 0.0
             # env stepping
-            obs, _, _, _ = env.step(actions)
+            obs, rew, dones, _ = env.step(actions)
+            log_actobs(actobs_log, actions[0], obs[0], rew[0], dones[0], log=LOG_ACTOBS) # log 1 robot
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -131,3 +180,12 @@ if __name__ == "__main__":
     main()
     # close sim app
     simulation_app.close()
+
+    daniel_args = """
+--headless --task Isaac-Velocity-Rough-H1-v0 --device cpu --disable_fabric
+
+--headless --task Isaac-Velocity-Rough-H1-v0 --load_run 2024-08-26_16-31-15 
+
+--headless --num_envs 10 --task Isaac-Velocity-Flat-H1-v0 --run_name 2024-09-10_14-07-02
+
+    """

@@ -50,3 +50,9 @@ class H1FlatPPORunnerCfg(H1RoughPPORunnerCfg):
         self.experiment_name = "h1_flat"
         self.policy.actor_hidden_dims = [128, 128, 128]
         self.policy.critic_hidden_dims = [128, 128, 128]
+
+@configclass
+class H1StandFlatPPORunnerCfg(H1FlatPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.experiment_name = "h1_standflat"
