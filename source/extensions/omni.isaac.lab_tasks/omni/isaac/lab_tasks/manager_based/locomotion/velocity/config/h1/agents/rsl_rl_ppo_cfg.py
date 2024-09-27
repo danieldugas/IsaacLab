@@ -52,6 +52,12 @@ class H1FlatPPORunnerCfg(H1RoughPPORunnerCfg):
         self.policy.critic_hidden_dims = [128, 128, 128]
 
 @configclass
+class H1FlatDelayPPORunnerCfg(H1FlatPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.experiment_name = "h1_flat_delay"
+
+@configclass
 class H1StandFlatPPORunnerCfg(H1FlatPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
