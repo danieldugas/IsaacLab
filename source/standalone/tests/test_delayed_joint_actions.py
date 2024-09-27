@@ -1,5 +1,5 @@
 from omni.isaac.lab.app import AppLauncher # otherwise omni.kit is missing
-app_launcher = AppLauncher()
+app_launcher = AppLauncher({"headless": True})
 simulation_app = app_launcher.app
 
 from omni.isaac.lab.envs.mdp.actions.delayed_joint_actions import test_delayed_joint_position_action

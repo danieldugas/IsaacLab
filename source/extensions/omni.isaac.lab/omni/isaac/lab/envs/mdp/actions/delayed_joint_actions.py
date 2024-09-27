@@ -21,7 +21,7 @@ class DelayedJointPositionAction(JointPositionAction):
         super().__init__(cfg, env)
         
         # create buffer
-        self._processed_actions_buffer = torch.zeros(self.num_envs, cfg.max_delay, self.action_dim, device=self.device)
+        self._processed_actions_buffer = torch.zeros(self.num_envs, cfg.max_delay+1, self.action_dim, device=self.device)
         self._constant_delay = cfg.const_delay_term(env)
         self._variable_delay_func = cfg.variable_delay_term
 
@@ -53,7 +53,7 @@ class DelayedJointPositionAction(JointPositionAction):
 def test_delayed_joint_position_action():
     from omni.isaac.lab.managers.action_manager import ActionManager
     from .delayed_joint_actions_cfg import DelayedJointPositionActionCfg, constant_delay
-    config = DelayedJointPositionActionCfg
+    config = DelayedJointPositionActionCfg()
     config.const_delay_term = constant_delay
     class SpoofEnv:
         def __init__(self):
@@ -64,9 +64,12 @@ def test_delayed_joint_position_action():
     applied_actions = []
     DECIMATION = 4
     device = 'cpu'
-    action_manager = ActionManager(config, env) # type: ignore
-    for action in action_sequence:
-        action_manager.process_action(action.to(device))
-        # perform physics stepping
-        for _ in range(DECIMATION):
-            action_manager.apply_action()
+    if False:
+        action_manager = ActionManager(config, env) # type: ignore
+        for action in action_sequence:
+            action_manager.process_action(action.to(device))
+            # perform physics stepping
+            for _ in range(DECIMATION):
+                action_manager.apply_action()
+    # action_manager_term = DelayedJointPositionAction(config, env)
+    # TODO

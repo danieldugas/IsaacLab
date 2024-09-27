@@ -3,18 +3,18 @@ from typing import TYPE_CHECKING
 
 from omni.isaac.lab.envs.mdp.actions import JointPositionActionCfg
 from omni.isaac.lab.utils import configclass
+from . import delayed_joint_actions
 
 if TYPE_CHECKING:
     from omni.isaac.lab.envs import ManagerBasedEnv
     from omni.isaac.lab.managers.action_manager import ActionTerm
     from collections.abc import Callable
-    from . import delayed_joint_actions
 
 def constant_delay(env: ManagerBasedEnv) -> torch.Tensor:
-    return torch.ones(env.num_envs)
+    return torch.ones(env.num_envs, device=env.device)
 
 def random_delay(env: ManagerBasedEnv) -> torch.Tensor:
-    return torch.randint(0, 2, (env.num_envs,))
+    return torch.randint(0, 2, (env.num_envs,), device=env.device)
 
 @configclass
 class DelayedJointPositionActionCfg(JointPositionActionCfg):
