@@ -129,6 +129,19 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg, agent_cfg: RslRlOnPolic
     # close the simulator
     env.close()
 
+    # export checkpoints
+    from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
+        export_policy_as_jit,
+        export_policy_as_onnx,
+    )
+    export_model_dir = os.path.join(log_dir, "exported")
+    export_policy_as_jit(
+        runner.alg.actor_critic, runner.obs_normalizer, path=export_model_dir, filename="lastckpt_policy.pt"
+    )
+    export_policy_as_onnx(
+        runner.alg.actor_critic, normalizer=runner.obs_normalizer, path=export_model_dir, filename="lastckpt_policy.onnx"
+    )
+
 
 if __name__ == "__main__":
     # run the main function
