@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
@@ -32,14 +33,14 @@ class DelayedJointPositionAction(JointPositionAction):
         super().process_actions(actions)
         # TODO roll delay buffer: if inefficient, could use something like
         # "from omni.isaac.lab.utils.buffer import CircularBuffer"
-        torch.roll(self._processed_actions_buffer, 1, 1) # shift by one
+        self._processed_actions_buffer = torch.roll(self._processed_actions_buffer, 1, 1) # shift by one
         self._processed_actions_buffer[:, 0] = self.processed_actions
         # sample delay, apply to action.  0 delay means we pass the latest, 1 the prev action, etc
         delay = self._constant_delay # (N_envs,)
         if self._variable_delay_func is not None:
             delay = delay + self._variable_delay_func(self._env)
         # clamp delay to 0 - cfg.max_delay
-        delay = torch.clamp(delay, 0, self.cfg.max_delay)
+        delay = torch.clamp(delay, 0, self.cfg.max_delay).to(torch.int64)
         # for each env, pick actions according to delay
         # TODO: should we store delayed actions directly in processed_actions?
         # depending on what other components expect processed_actions to be
@@ -50,26 +51,52 @@ class DelayedJointPositionAction(JointPositionAction):
         self._asset.set_joint_position_target(self._delayed_processed_actions, joint_ids=self._joint_ids)
 
 
-def test_delayed_joint_position_action():
+def test_delayed_joint_position_action(human=False):
     from omni.isaac.lab.managers.action_manager import ActionManager
     from .delayed_joint_actions_cfg import DelayedJointPositionActionCfg, constant_delay
-    config = DelayedJointPositionActionCfg()
-    config.const_delay_term = constant_delay
+    from omni.isaac.lab.utils import configclass
+
+    @configclass
+    class ActionsCfg:
+        """Action specifications for the MDP."""
+        joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True)
+    actions_config = ActionsCfg()
+    actions_config.joint_pos.const_delay_term = constant_delay # for testing, constant delay of 1
+    actions_config.joint_pos.scale = 1 # less confusing than default 0.5 scale
+    # spoofing classes, with just enough to test this 
+    N_ENV = 2
+    N_JNT = 4
+    class SpoofAsset:
+        def __init__(self):
+            self.num_joints = N_JNT
+            self.data = type("SpoofData", (), {"default_joint_pos": torch.zeros(N_ENV, N_JNT)})
+            self.applied_actions = []
+        def set_joint_position_target(self, processed_actions, **kwargs):
+            self.applied_actions.append(processed_actions)
+        def find_joints(self, *args, **kwargs):
+            return list(range(N_JNT)), ["spoofjoint" + str(i) for i in range(N_JNT)]
     class SpoofEnv:
         def __init__(self):
-            self.num_envs = 2
+            self.num_envs = N_ENV
+            self.device = 'cpu'
+            self.scene = {'robot': SpoofAsset()}
     env = SpoofEnv()
-    N_ACT = 10
-    action_sequence = [torch.ones(N_ACT) * i for i in range(10)]
-    applied_actions = []
+    # create a sequence and check that delay is 1
+    N_SEQ = 20
+    action_sequence = [torch.ones((N_ENV, N_JNT)) * i for i in range(N_SEQ)]
     DECIMATION = 4
     device = 'cpu'
-    if False:
-        action_manager = ActionManager(config, env) # type: ignore
-        for action in action_sequence:
-            action_manager.process_action(action.to(device))
-            # perform physics stepping
-            for _ in range(DECIMATION):
-                action_manager.apply_action()
-    # action_manager_term = DelayedJointPositionAction(config, env)
-    # TODO
+    action_manager = ActionManager(actions_config, env) # type: ignore
+    for i, action in enumerate(action_sequence):
+        action_manager.process_action(action.to(device))
+        # perform physics stepping
+        for _ in range(DECIMATION):
+            action_manager.apply_action()
+    applied_actions = env.scene['robot'].applied_actions
+    assert len(applied_actions) == (N_SEQ * DECIMATION)
+    for i in range(N_SEQ-1):
+        env_idx = 0
+        if human:
+            print("{}, {}".format(applied_actions[::4][i+1][env_idx], action_sequence[i][env_idx]))
+        assert torch.all(applied_actions[::4][i+1] == action_sequence[i]), "actions not delayed correctly"
+    print("test_delayed_joint_position_action passed")

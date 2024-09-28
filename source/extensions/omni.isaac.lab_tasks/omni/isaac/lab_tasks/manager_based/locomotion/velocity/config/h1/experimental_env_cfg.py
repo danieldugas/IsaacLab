@@ -29,6 +29,12 @@ class H1StandFlatEnvCfg(H1RoughEnvCfg):
         self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
         self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
 
+
+@configclass
+class ActionsCfg:
+    """Action specifications for the MDP."""
+    joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True)
+
 # delay
 @configclass
 class H1FlatDelayEnvCfg(H1FlatEnvCfg):
