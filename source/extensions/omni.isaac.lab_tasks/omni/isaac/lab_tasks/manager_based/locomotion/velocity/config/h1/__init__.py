@@ -78,7 +78,7 @@ gym.register(
 )
 
 gym.register(
-    id="Isaac-Flat-NoLinVel-H1-v0",
+    id="Isaac-Velocity-Flat-NoLinVel-H1-v0",
     entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
