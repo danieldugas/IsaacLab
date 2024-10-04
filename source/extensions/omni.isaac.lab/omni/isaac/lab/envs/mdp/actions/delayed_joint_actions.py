@@ -53,7 +53,7 @@ class DelayedJointPositionAction(JointPositionAction):
 
 def test_delayed_joint_position_action(human=False):
     from omni.isaac.lab.managers.action_manager import ActionManager
-    from .delayed_joint_actions_cfg import DelayedJointPositionActionCfg, constant_delay
+    from .delayed_joint_actions_cfg import DelayedJointPositionActionCfg, constant_1step_delay
     from omni.isaac.lab.utils import configclass
 
     @configclass
@@ -61,7 +61,7 @@ def test_delayed_joint_position_action(human=False):
         """Action specifications for the MDP."""
         joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True)
     actions_config = ActionsCfg()
-    actions_config.joint_pos.const_delay_term = constant_delay # for testing, constant delay of 1
+    actions_config.joint_pos.const_delay_term = constant_1step_delay # for testing, constant delay of 1
     actions_config.joint_pos.scale = 1 # less confusing than default 0.5 scale
     # spoofing classes, with just enough to test this 
     N_ENV = 2

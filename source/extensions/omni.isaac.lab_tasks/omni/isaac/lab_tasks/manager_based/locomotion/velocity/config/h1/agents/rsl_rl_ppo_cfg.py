@@ -58,6 +58,12 @@ class H1FlatDelayPPORunnerCfg(H1FlatPPORunnerCfg):
         self.experiment_name = "h1_flat_delay"
 
 @configclass
+class H1FlatNoLinVelPPORunnerCfg(H1FlatPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.experiment_name = "h1_flat_nolinvel"
+
+@configclass
 class H1StandFlatPPORunnerCfg(H1FlatPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
