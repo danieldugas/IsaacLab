@@ -29,6 +29,7 @@ cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
+print(args_cli)
 # always enable cameras to record video
 if args_cli.video:
     args_cli.enable_cameras = True
@@ -88,6 +89,10 @@ def main():
     log_dir = os.path.dirname(resume_path)
 
     # create isaac environment
+    if args_cli.video: # center camera on robot and zoom
+        env_cfg.viewer.origin_type = "asset_root"
+        env_cfg.viewer.asset_name = "robot"
+        env_cfg.viewer.eye = (3., 3., 3.)
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
     # wrap for video recording
     if args_cli.video:
@@ -173,6 +178,8 @@ def main():
 
     # close the simulator
     env.close()
+    if args_cli.video:
+        print("Video recorded to:", env.env.video_folder)
 
 
 if __name__ == "__main__":
@@ -186,6 +193,6 @@ if __name__ == "__main__":
 
 --headless --task Isaac-Velocity-Rough-H1-v0 --load_run 2024-08-26_16-31-15 
 
---headless --num_envs 10 --task Isaac-Velocity-Flat-H1-v0 --run_name 2024-09-10_14-07-02
+--headless --num_envs 1 --task Isaac-Velocity-Flat-H1-v0 --load_run 2024-09-10_14-07-02 --video --video_length 500
 
     """
