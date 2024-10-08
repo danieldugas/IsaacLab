@@ -35,3 +35,5 @@ class DelayedJointPositionActionCfg(JointPositionActionCfg):
     """The function to determine the constant delay for the action. Defaults to a constant delay of 1 step for all envs."""
     variable_delay_term: None | Callable[..., torch.Tensor] = None
     """The function to determine the variable delay for the action. Defaults to 0 for all envs."""
+    FREEZE_ARMS = False
+    """ If true, no action is applied to the shoulder and elbow joints. """

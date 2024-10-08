@@ -51,5 +51,22 @@ class H1FlatDelayEnvCfg(H1FlatEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
-
         self.actions.joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True)
+
+    
+@configclass
+class H1FlatFreezeArmsEnvCfg(H1FlatEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        self.actions.joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True, FREEZE_ARMS=True)
+    
+@configclass
+class H1FlatNoLinVelFreezeArmsEnvCfg(H1FlatEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        self.observations.policy.base_lin_vel = None    
+        self.actions.joint_pos = DelayedJointPositionActionCfg(asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True, FREEZE_ARMS=True)
+        self.actions.joint_pos.variable_delay_term = random_1step_delay
+        self.actions.joint_pos.max_delay = 2

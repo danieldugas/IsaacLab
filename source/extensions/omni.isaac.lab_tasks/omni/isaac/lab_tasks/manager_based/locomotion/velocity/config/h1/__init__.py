@@ -86,3 +86,23 @@ gym.register(
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:H1FlatNoLinVelPPORunnerCfg",
     },
 )
+
+gym.register(
+    id="Isaac-Velocity-Flat-FreezeArms-H1-v0",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": experimental_env_cfg.H1FlatFreezeArmsEnvCfg,
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:H1FlatFreezeArmsPPORunnerCfg",
+    },
+)
+
+gym.register(
+    id="Isaac-Velocity-Flat-NoLinVel-FreezeArms-H1-v0",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": experimental_env_cfg.H1FlatNoLinVelFreezeArmsEnvCfg,
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:H1FlatNoLinVelFreezeArmsPPORunnerCfg",
+    },
+)

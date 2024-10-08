@@ -68,3 +68,15 @@ class H1StandFlatPPORunnerCfg(H1FlatPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
         self.experiment_name = "h1_standflat"
+
+@configclass
+class H1FlatFreezeArmsPPORunnerCfg(H1FlatPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.experiment_name = "h1_flat_freezearms"
+
+@configclass
+class H1FlatNoLinVelFreezeArmsPPORunnerCfg(H1FlatPPORunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.experiment_name = "h1_flat_nolinvel_freezearms"

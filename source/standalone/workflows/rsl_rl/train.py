@@ -148,3 +148,7 @@ if __name__ == "__main__":
     main()
     # close sim app
     simulation_app.close()
+
+    """
+--task Isaac-Velocity-Flat-FreezeArms-H1-v0 --headless --run_name test_freezearms
+"""

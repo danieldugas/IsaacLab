@@ -25,11 +25,18 @@ class DelayedJointPositionAction(JointPositionAction):
         self._processed_actions_buffer = torch.zeros(self.num_envs, cfg.max_delay+1, self.action_dim, device=self.device)
         self._constant_delay = cfg.const_delay_term(env)
         self._variable_delay_func = cfg.variable_delay_term
+        if self.cfg.FREEZE_ARMS:
+            self._arms_mask = torch.zeros(self.num_envs, self.action_dim, device=self.device)
+            for i, name in enumerate(self._asset.joint_names):
+                if "shoulder" in name or "elbow" in name:
+                    self._arms_mask[:, i] = 1
 
     def process_actions(self, actions: torch.Tensor):
         # Delay is applied in process_actions because apply_actions is called at every decimation step
         # (see manager_based_env step() method.)
         # this action will be applied to the environment N steps in the future (N = Delay)
+        if self.cfg.FREEZE_ARMS:
+            actions = actions * (1 - self._arms_mask) + 0 * self._arms_mask
         super().process_actions(actions)
         # TODO roll delay buffer: if inefficient, could use something like
         # "from omni.isaac.lab.utils.buffer import CircularBuffer"
