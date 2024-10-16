@@ -126,7 +126,7 @@ class RslRlOnPolicyRunnerCfg:
     neptune_project: str = "isaaclab"
     """The neptune project name. Default is "isaaclab"."""
 
-    wandb_project: str = "isaaclab"
+    wandb_project: str = "loco-isaaclab"
     """The wandb project name. Default is "isaaclab"."""
 
     ##
